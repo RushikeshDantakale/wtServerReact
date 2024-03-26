@@ -1,12 +1,9 @@
 const mongoose = require('mongoose');
 
 // Connection string from environment variable
-const DB = process.env.DB;
+const DB = "mongodb+srv://Rushi9080:Rushi9080@cluster0.dnrwsii.mongodb.net/reactQuiz?retryWrites=true&w=majority&appName=Cluster0";
 
-mongoose.connect(DB, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
+mongoose.connect(DB)
 .then(() => {
     console.log('Connection to MongoDB successful');
 })
