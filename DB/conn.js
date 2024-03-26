@@ -1,13 +1,15 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
-mongoose.set("strictQuery", false)
+// Connection string from environment variable
+const DB = process.env.DB;
 
-
-const DB = process.env.DB ;
-
-
-mongoose.connect(DB).then(()=>{
-        console.log('connection successful')
-    }).catch((err)=>{
-        console.log(err)
-    });
+mongoose.connect(DB, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(() => {
+    console.log('Connection to MongoDB successful');
+})
+.catch((err) => {
+    console.error('Error connecting to MongoDB:', err.message);
+});
