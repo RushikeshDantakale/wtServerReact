@@ -3,7 +3,9 @@ const mongoose = require('mongoose')
 mongoose.set("strictQuery", false)
 
 
-const DB =  process.env.DB;
+const DB =  process.env.URI;
+
+console.log(DB , 8);
 
 
 mongoose.connect(DB).then(()=>{
