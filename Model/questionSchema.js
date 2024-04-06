@@ -19,6 +19,9 @@ const questionSchema = new mongoose.Schema({
         type:[String],
         required:true
     },
+    topic_code:{
+      type:String
+    }
 },
     {
         timestamps: true // Automatically add createdAt and updatedAt fields
