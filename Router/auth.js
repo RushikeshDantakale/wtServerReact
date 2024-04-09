@@ -10,6 +10,7 @@ require("../DB/conn")
 const Question = require("../Model/questionSchema")
 const Topic = require("../Model/topicSchema")
 const User = require("../Model/userSchema")
+const Register = require("../Model/registerSchema")
 
 
 router.get("/" , (req,res) =>{
@@ -39,56 +40,112 @@ router.get("/get_questions",async (req,res)=>{
  })
 
 router.post("/create_question_set" ,async (req, res) => {
-
-  
-  
   try{
     const que_set_exists =await Topic.find({name: req.body.set_name})
-    
     //first get the topic info and if its unique , then proceed
     if(que_set_exists.length === 0){
-      
-      const {set_name  ,number_of_question:no_of_questions , description } = req.body
-
-      // {
-      //   set_name: 'Science',
-      //   description: 'This is Science Topic',
-      //   questions: [
-      //     {
-      //       question: 'What is Science',
-      //       choices: [Array],
-      //       checkedAnswers: [Array]
-      //     },
-      //     { question: 'QQQW', choices: [Array], checkedAnswers: [Array] }
-      //   ]
-      // } 
-
-      
+      const {set_name  ,number_of_question:no_of_questions , description } = req.body     
       //if its not unique -> generate the 5 digit number code which will be unique, and save the code as topic code.
-      const topic_code = generateCodeString();
-
-      console.log({set_name  ,number_of_question:no_of_questions , description } , 51);
-      
-      
+      const topic_code = generateCodeString();     
+      console.log(req.body , 51);
       const newTopic = new Topic({name:set_name,no_of_questions , description , topic_code });
-
       // Save the new topic document
       const savedTopic = await newTopic.save();
-      
-      res.status(201).json({message: "Question information saved successfully!" , savedTopic});
-      
-      
+      let updated_questions = req.body.questions.map((que)=>{
+          return {
+            ...que,
+            topic_code 
+          }
+      })
+      const queResponse =await Question.insertMany(updated_questions, { ordered: false })
+      console.log(updated_questions , 72);
+      console.log(queResponse , 72);
       //and every question with the question , choices and correct answers, join one more atrribute topic code
-      
+        if(queResponse && newTopic){
+         return res.status(201).json({message: "Question set information saved successfully!" , savedTopic});
+        } 
     }else{
       //if not unique-> give error topic name already in use or topic name not available.
       return res.status(501).json({error:"Topic Already Exists! Try to Create the different Topic Name!"})
     }
   }catch(error){
-      res.send(error)
+      res.status(501).json({error:"Internal Server Error!"})
   }
+})
 
+router.get("/get-topics",async(req,res)=>{
+  try{
+    const response =await Topic.find({})
+    res.status(201).send(response)
+
+  }catch(error){
+    res.send(error)
+  }
   
+})
+
+//get all users
+router.get("/admin/getRegisteredUsers" , async (req,res) =>{
+  try{
+      const users = await Register.find({})
+      res.status(201).send(users)
+  }catch(error){
+    res.send(error)
+  }
+})
+
+router.delete("/delete/:id/:topic_code" ,async (req,res) =>{
+  const {id , topic_code} = req.params;
+  try{
+    const questions = await Question.deleteMany({topic_code})
+    const deletedTopic = await Topic.findByIdAndDelete(id);
+    if (deletedTopic && questions) {
+      return res.status(201).json({ message: "Topic and Topic Related Questions Deleted Successfully!" });
+    }
+    res.status(501).json({ error: "Something Went Wrong!" });
+  }catch(error){
+      res.status(501).send("Internal Server Error!")
+  }
+})
+
+//delete user record
+router.delete("/userDelete/:id" ,async (req,res) =>{
+  const {id } = req.params;
+  try{
+    const deletedUser = await Register.findByIdAndDelete(id);
+    if (deletedUser) {
+      return res.status(201).json({ message: "User Deleted Successfully!" });
+    }
+    res.status(501).json({ error: "Something Went Wrong!" });
+  }catch(error){
+      res.status(501).send("Internal Server Error!")
+  }
+})
+
+router.post("/getQuestions/:topic_code",async (req,res)=>{
+  const {topic_code} = req.params
+
+  const questions = await Question.find({topic_code})
+
+  res.send(questions)
+})
+
+
+//for registration with email and give access to give the quizz
+router.post("/user/register" ,async (req,res)=>{
+  const {email , topic_code , topic_name} = req.body
+  try{
+    const isExist = await Register.find({$and : [{email} ,{topic_code} ]})
+    if(isExist.length !== 0){
+      return res.status(501).send("You already given that quiz!")
+    }
+    const userRegister = new Register({email , topic_code , topic_name });
+      // Save the new user record
+    await userRegister.save()
+    res.status(201).send({message:"user Registered Successfully!"})
+  }catch(error){
+    res.send(error)
+  }
 })
 
 

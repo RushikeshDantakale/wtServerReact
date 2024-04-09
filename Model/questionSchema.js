@@ -16,7 +16,7 @@ const questionSchema = new mongoose.Schema({
     }
     },
     answer:{
-        type:[String],
+        type:[Number],
         required:true
     },
     topic_code:{
