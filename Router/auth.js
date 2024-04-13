@@ -22,6 +22,8 @@ router.post("/admin/login" , async (req,res)=>{
 
     const collection = mongoose.connection.collection('admin')
     const user = await collection.find({}).toArray()
+
+    
     
     if(user[0].username == email && user[0].password == password){
         res.status(200).json({message:"Login Successful !" , user})
