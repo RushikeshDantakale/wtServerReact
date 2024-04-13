@@ -1,4 +1,4 @@
-const { generateCodeString } = require('../Functions/function');
+const { generateCodeString , convertToSeconds } = require('../Functions/function');
 const express = require('express')
 const router = express()
 const mongoose = require("mongoose")
@@ -21,13 +21,12 @@ router.post("/admin/login" , async (req,res)=>{
     const { email , password } = req.body
 
     const collection = mongoose.connection.collection('admin')
-    const response = await collection.find({}).toArray()
+    const user = await collection.find({}).toArray()
     
-    if(response[0].username == email && response[0].password == password){
-        res.status(200).json({message:"Login Successful !"})
+    if(user[0].username == email && user[0].password == password){
+        res.status(200).json({message:"Login Successful !" , user})
     }else{
-
-        res.status(401).json({error:"Invalid Username or Password !" , username : response[0].username })
+        res.status(401).json({error:"Invalid Username or Password !"})
     }
 })
 
@@ -41,14 +40,16 @@ router.get("/get_questions",async (req,res)=>{
 
 router.post("/create_question_set" ,async (req, res) => {
   try{
+    console.log(req.body , 51);
     const que_set_exists =await Topic.find({name: req.body.set_name})
     //first get the topic info and if its unique , then proceed
     if(que_set_exists.length === 0){
-      const {set_name  ,number_of_question:no_of_questions , description } = req.body     
+      const {set_name  ,number_of_question:no_of_questions , description,quiz_time:{hr , min} } = req.body     
       //if its not unique -> generate the 5 digit number code which will be unique, and save the code as topic code.
+      const time = convertToSeconds(hr , min)
+      console.log(time , 49);
       const topic_code = generateCodeString();     
-      console.log(req.body , 51);
-      const newTopic = new Topic({name:set_name,no_of_questions , description , topic_code });
+      const newTopic = new Topic({name:set_name,no_of_questions , description , topic_code , time });
       // Save the new topic document
       const savedTopic = await newTopic.save();
       let updated_questions = req.body.questions.map((que)=>{
@@ -140,9 +141,15 @@ router.post("/user/register" ,async (req,res)=>{
       return res.status(501).send("You already given that quiz!")
     }
     const userRegister = new Register({email , topic_code , topic_name });
+    const topic_info = await Topic.find({topic_code})
+    const questions=  await Question.find({topic_code})
+
       // Save the new user record
     await userRegister.save()
-    res.status(201).send({message:"user Registered Successfully!"})
+    res.status(201).send({message:"user Registered Successfully!" , data : {
+      topic_info , 
+      questions
+    }})
   }catch(error){
     res.send(error)
   }

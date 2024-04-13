@@ -15,6 +15,9 @@ const topicSchema = new mongoose.Schema({
     },
     topic_code : {
         type:String
+    },
+    time : {
+        type : Number
     }
 
 },
