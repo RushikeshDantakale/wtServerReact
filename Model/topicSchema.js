@@ -10,7 +10,7 @@ const topicSchema = new mongoose.Schema({
         type: String
     },
     no_of_questions: {
-        type: String,
+        type: Number,
         required: true
     },
     topic_code : {

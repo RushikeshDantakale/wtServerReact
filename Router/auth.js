@@ -76,6 +76,23 @@ router.post("/create_question_set" ,async (req, res) => {
   }
 })
 
+
+//update and add questions
+router.post("/add_and_update_questions" ,async (req,res) => {
+  const {topic_code , questions } = req.body
+  const que_length = questions.length
+  console.log(questions , 82);
+  try{
+      const updateNumberQue = await Topic.updateOne({topic_code},{$inc : { no_of_questions : que_length  }})
+      const insertNewQue = Question.insertMany(questions)
+      console.log(updateNumberQue , insertNewQue , 88);
+      res.status(201).send({message:"questions added successfully!" , record : insertNewQue})
+  }catch(err){
+    res.status(501).send("Internal Server Error!")
+  }
+
+})
+
 router.get("/get-topics",async(req,res)=>{
   try{
     const response =await Topic.find({})
@@ -154,6 +171,30 @@ router.post("/user/register" ,async (req,res)=>{
     }})
   }catch(error){
     res.send(error)
+  }
+})
+
+
+router.post("/update_question_set" ,async (req,res) => {
+  try {
+    const { topic_code, set_name, description, number_of_question, quiz_time, questions } = req.body;
+
+    const time = convertToSeconds(quiz_time.hr , quiz_time.min)
+
+    // Update the question set
+    await Topic.findOneAndUpdate({ topic_code }, { name:set_name, description, no_of_questions:number_of_question, time });
+
+    // Update each question in the question set
+    for (const updatedQuestion of questions) {
+      const { _id, question, choices, answer } = updatedQuestion;
+      await Question.findByIdAndUpdate(_id, { question, choices, answer });
+    }
+
+    // Send a success response
+    res.status(200).json({ message: 'Question set and questions updated successfully' });
+  } catch (error) {
+    console.error('Error updating question set:', error);
+    res.status(500).json({ error: 'An error occurred while updating the question set' });
   }
 })
 

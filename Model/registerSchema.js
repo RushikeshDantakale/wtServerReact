@@ -12,6 +12,12 @@ const registerSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    que_attempted : {
+        type:Number
+    },
+    total_right_answers : {
+        type : [Number]
+    }
 
 },
 {
