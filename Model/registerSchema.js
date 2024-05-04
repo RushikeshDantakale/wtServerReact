@@ -17,6 +17,9 @@ const registerSchema = new mongoose.Schema({
     },
     total_right_answers : {
         type : [Number]
+    },
+    givenAnswers : {
+        type : [[Number]]
     }
 
 },

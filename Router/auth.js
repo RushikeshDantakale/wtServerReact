@@ -1,4 +1,4 @@
-const { generateCodeString , convertToSeconds } = require('../Functions/function');
+const { generateCodeString , convertToSeconds , getCorrectAnsIndex } = require('../Functions/function');
 const express = require('express')
 const router = express()
 const mongoose = require("mongoose")
@@ -164,14 +164,40 @@ router.post("/user/register" ,async (req,res)=>{
     const questions=  await Question.find({topic_code})
 
       // Save the new user record
-    await userRegister.save()
+    const user =   await userRegister.save()
     res.status(201).send({message:"user Registered Successfully!" , data : {
       topic_info , 
-      questions
+      questions , 
+      user
     }})
   }catch(error){
     res.send(error)
   }
+})
+
+//submit route when user submits the quiz
+router.post("/user/submit_quiz" ,async (req , res) => {
+  const {givenAnswers , topic_code , email} = req.body;
+  const answers =  await Question.find({topic_code} , "-_id answer")
+
+  let ans = answers.map(ans => ans.answer)
+
+  
+  if (givenAnswers.length < ans.length) {
+    const diff = givenAnswers.length - ans.length;
+    for (let i = 0; i < diff; i++) {
+      ans.push([]);
+    }
+  }
+
+
+  console.log(ans , 183);
+
+  console.log(givenAnswers , 182);
+  console.log(getCorrectAnsIndex( givenAnswers ,ans ) , 197);
+  const response = await Register.findOneAndUpdate({topic_code , email} , { givenAnswers})
+  // console.log(response , 180);
+  res.status(200).send({message :"quiz submitted!" , record:response})
 })
 
 
@@ -198,6 +224,13 @@ router.post("/update_question_set" ,async (req,res) => {
   }
 })
 
+router.post("/quiz_response" , async(req,res) => {
+  const {email , topic_code } = req.body;
+  const user = await Register.find({email , topic_code});
+  console.log(user ,211);
+
+
+})
 
 
 router.get("/test" , (req,res) => {

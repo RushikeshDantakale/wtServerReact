@@ -21,4 +21,26 @@ const convertSecondsToHoursAndMinutes = (seconds) => {
   return { hr, min };
 };
 
-module.exports =  { generateCodeString , convertToSeconds , convertSecondsToHoursAndMinutes } 
+const  getCorrectAnsIndex = (givenAnswerArray , targetArray ) => {
+  return givenAnswerArray.reduce((indices, ans, index) => {
+      // Check if the lengths of the arrays match
+      if (ans.length !== targetArray[index].length) return indices;
+
+      // Compare each element of the arrays individually
+      if (ans.length === 1 && ans[0] === targetArray[index][0]) {
+          indices.push(index); // If single-element arrays match, push the index
+      } else {
+          let match = true;
+          for (let i = 0; i < ans.length; i++) {
+              if (ans[i] !== targetArray[index][i]) {
+                  match = false;
+                  break;
+              }
+          }
+          if (match) indices.push(index); // If all elements match, push the index
+      }
+      return indices;
+  });
+}
+
+module.exports =  { generateCodeString , convertToSeconds , convertSecondsToHoursAndMinutes ,getCorrectAnsIndex } 
